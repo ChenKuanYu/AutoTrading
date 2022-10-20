@@ -10,6 +10,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 raw_columns = ["open", "high", "low", "close"]
 
+testing = 0
+model_refresh_freq = 30
+
 def load_data(filename):
     print("Load: {}".format(filename))
     data_df = pd.read_csv(filename, names=raw_columns, header=None)
@@ -56,6 +59,7 @@ class Trader:
         self.hold_stock = 0
         self.model = None
         self.train_df = None
+        self.new_added_num = 0
     
     def buy_stock(self):
         if self.hold_stock == -1:
@@ -81,11 +85,13 @@ class Trader:
 
     def create_model(self, input_shape):
         regressor = Sequential()
-        #regressor.add(LSTM(units = 100, input_shape = input_shape))
-        regressor.add(LSTM(units = 100, return_sequences=True, input_shape = input_shape))
-        regressor.add(Dropout(0.2))
-        regressor.add(LSTM(units=100))
-        regressor.add(Dropout(0.2))
+        if testing == 1:
+            regressor.add(LSTM(units = 100, input_shape = input_shape))
+        else:
+            regressor.add(LSTM(units = 100, return_sequences=True, input_shape = input_shape))
+            regressor.add(Dropout(0.2))
+            regressor.add(LSTM(units=100))
+            regressor.add(Dropout(0.2))
         regressor.add(Dense(units = 1, activation='sigmoid'))
         regressor.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics=['accuracy'])
         print(regressor.summary())
@@ -126,6 +132,10 @@ class Trader:
     def re_training(self, entry):
         print("Keep learn new data: {}".format(entry))
         self.train_df = pd.concat([self.train_df, entry], ignore_index=True)
+        self.new_added_num += 1
+        if self.new_added_num == model_refresh_freq:
+            self.train(self.train_df)
+            self.new_added_num = 0
 
 if __name__ == '__main__':
     # You should not modify this part.
