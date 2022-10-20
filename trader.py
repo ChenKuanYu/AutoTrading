@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
     testing_data = load_data(args.testing)
     with open(args.output, 'w') as output_file:
-        for i in range(testing_data.shape[0]):
+        for i in range(testing_data.shape[0]-1):
             row_df = testing_data.loc[i].to_frame().transpose()
             # We will perform your action as the open price in the next day.
             action = trader.predict_action(row_df)
